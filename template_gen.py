@@ -1,3 +1,4 @@
+# coding: utf-8
 import django
 from django.conf import settings
 from django import template
@@ -45,7 +46,7 @@ ctx_data = {"flt_tags": ','.join(tags), 'diag': diag, 'config': config }
 context = Context(ctx_data)
 
 result = template.render(context)
-out = str(result) # strip('\ufeff')
+out = str(result)
 sys.stdout.buffer.write(out.encode('utf-8'))
 sys.stdout.flush()
 pp(diag, stream=sys.stderr)
