@@ -1,6 +1,7 @@
 from django import template
 from django.template.base import FilterExpression, kwarg_re
 from django.utils.safestring import mark_safe
+import sys
 
 register = template.Library()
 
@@ -43,48 +44,55 @@ def do_flt_var(parser, token):
     return do_filterable(parser, token, False)
 
 
-def get_flt_tags(context):
+def get_filter_tags(context):
     tags = context.get('flt_tags', 'gen')
     return set(tags.split(','))
 
-
-# class FilterableVarBase(template.Node):
+def block_filter(diag, filter_tags, block_tags):
+    diag.setdefault('tags_used', dict())
+    diag.setdefault('tags_not_used', dict())
+    include=False
+    for tag in block_tags:
+        if tag in filter_tags:
+            include=True
+            diag['tags_not_used'].pop(tag,None)
+            diag['tags_used'].setdefault(tag,1)
+        elif tag not in diag['tags_used']:
+            print ('not used: %s' % (tag), file=sys.stderr)
+            diag['tags_not_used'].setdefault(tag,1)
+    return include
 
 class FilterableVar(template.Node):
 
-    def __init__(self, flt_tags, str_value):
-        self.flt_tags = flt_tags
+    def __init__(self, block_tags, str_value):
+        self.block_tags = block_tags
         self.str_value = str_value
 
     def render(self, context):
-        tag_set = get_flt_tags(context)
-        if (tag_set & self.flt_tags):
+        config = context.get('config', {})
+        include = block_filter(context.get('diag', {}), get_filter_tags(context), self.block_tags)
+        if (include):
             return mark_safe(self.str_value or '')
+        elif config.get('comment'):
+            return mark_safe('<!--%s-->' % (self.str_value or ''))
         return ''
 
 
 class FilterableBlock(template.Node):
-    def __init__(self, flt_tags, nodelist):
-        self.flt_tags = flt_tags
+    def __init__(self, block_tags, nodelist):
+        self.block_tags = block_tags
         self.nodelist = nodelist
 
     def render(self, context):
-        # try:
-        #     limit = int(self.limit.resolve(context))
-        # except (ValueError, TypeError):
-        #     limit = -1
-
-        # from_string = self.old.resolve(context)
-        # to_string = conditional_escape(self.new.resolve(context))
-        # Those should be checked for stringness. Left as an exercise.
-        tag_set = get_flt_tags(context)
-        if (tag_set & self.flt_tags):
+        config = context.get('config', {})
+        include = block_filter(context.get('diag', {}), get_filter_tags(context), self.block_tags)
+        if (include):
             content = self.nodelist.render(context)
             return content
+        elif config.get('comment'):
+            content = self.nodelist.render(context)
+            return '<!--%s-->' % (content)
         return ''
-
-        # content = mark_safe(content.replace(from_string, to_string, limit))
-        return content
-
+    
 register.tag('flt_block', do_flt_block)
 register.tag('flt_var', do_flt_var)
