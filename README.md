@@ -46,4 +46,6 @@ Running p3 template_gen.py  -t in1,!ex1 test1.tpl produces:
     included if inclusion tags have in1 or in2
     included if in1 is in the inclusion tags
 
+### Tests can be run like:
 
+`python -m unittest tests.test`
