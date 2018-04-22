@@ -50,13 +50,17 @@ def do_flt_var(parser, token):
 
 def get_include_tags(context):
     ''' Returns the set of inclusion tags from context '''
-    tags = context.get('include', 'gen')
+    tags = context.get('include', '.')
+    if type(tags)==set:
+        return tags
     return set(tags.split(','))
 
 
 def get_exclude_tags(context):
     ''' Returns the set of exclusion tags from context '''
-    tags = context.get('exclude', 'gen')
+    tags = context.get('exclude', '.')
+    if type(tags) == set:
+        return tags
     return set(tags.split(','))
 
 

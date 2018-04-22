@@ -12,9 +12,9 @@ if not settings.configured:
             'APP_DIRS': False,
             'OPTIONS': {
                 'libraries': {
-                    'filterable_blocks': 'filterable_blocks',
+                    'filterable_blocks': 'filterable_blocks.filterable_blocks',
                 },
-                'builtins': ['filterable_blocks'],
+                'builtins': ['filterable_blocks.filterable_blocks'],
             },
         },
     ])

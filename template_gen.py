@@ -11,12 +11,12 @@ from pprint import pprint as pp
 settings.configure(TEMPLATES=[
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'APP_DIRS': False, # we have no apps
+        'APP_DIRS': False,
         'OPTIONS': {
             'libraries': {
-                'flt_tags': 'flt_tags',
+                'filterable_blocks': 'filterable_blocks.filterable_blocks',
             },
-            'builtins': [ 'flt_tags'] ,
+            'builtins': [ 'filterable_blocks.filterable_blocks'] ,
         },
     },
 ])
@@ -30,7 +30,15 @@ parser.add_argument('-c','--comment', action='store_true', required=False)
 parser.add_argument('-t','--tags', required=True)
 args, uargs = parser.parse_known_args()
 
-tags = set( (args.tags or '.').split(','))
+include_set=set()
+exclude_set=set()
+for tag in (args.tags or '.').split(','):
+    if not tag:
+        continue
+    elif tag[0]=='!':
+        exclude_set.add(tag[1:])
+    else:
+        include_set.add(tag)
 
 with open(uargs[0], 'r', encoding='utf-8') as f:
     tpl = f.read()
@@ -41,7 +49,7 @@ diag = {}
 config = {}
 if args.comment:
     config['comment']=1
-ctx_data = {"flt_tags": ','.join(tags), 'diag': diag, 'config': config }
+ctx_data = {"include": include_set, 'exclude': exclude_set, 'diag': diag, 'config': config }
 
 context = Context(ctx_data)
 
